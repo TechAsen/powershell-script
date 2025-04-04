@@ -1,3 +1,34 @@
+<#
+.SYNOPSIS
+Remotely removes the Archicad installer file from multiple Windows machines.
+
+.DESCRIPTION
+- Verifies each PC is online via ping
+- Connects remotely using PowerShell Remoting and domain credentials
+- Checks for the existence of the installer file
+- Removes the installer if found
+- Logs the result for each machine locally and centrally
+
+.PARAMETER $computers
+A list of machine names to process.
+
+.PARAMETER $installerPath
+Path to the installer file on each remote PC (e.g. C:\ProgramData\ArchicadInstaller.exe).
+
+.NOTES
+Author: TechAsen  
+Version: 1.0  
+Created: April 2025  
+Tested on: Windows 10, 11, Server 2019, Server 2022  
+Requirements: PowerShell Remoting (WinRM), domain credentials
+
+.EXAMPLE
+Run as administrator with network access to the target machines:
+
+.\Remove_ArchicadInstaller.ps1
+
+#>
+
 ﻿# Allow script execution temporarily for this session
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 
