@@ -7,6 +7,8 @@
 
 ### 🔹 System Maintenance
 
+- Update_Archicad_Remotly.ps1 - Remotle update on Archicad PCs via Powershell Remoting
+
 ### 🔹 Network Tools
 
 ### 🔹 Security & Audit
