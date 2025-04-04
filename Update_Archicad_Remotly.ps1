@@ -25,7 +25,7 @@ Parameters passed to the installer (silent/unattended mode)
 Author: TechAsen  
 Version: 1.0  
 Created: April 2025  
-Tested on: Windows 10, 11, Server 2019  
+Tested on: Windows 10, 11, Server 2019л, Server 2022  
 Requires: PowerShell Remoting (WinRM enabled) and domain credentials
 
 .EXAMPLE
