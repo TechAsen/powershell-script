@@ -1,3 +1,40 @@
+<#
+.SYNOPSIS
+Remotely deploys Archicad hotfix to multiple Windows PCs via PowerShell Remoting.
+
+.DESCRIPTION
+- Checks if each target PC is online (ping)
+- Copies the Archicad installer to the remote machine
+- Executes a silent unattended installation using Graphisoft-supported switches
+- Logs installation results on each machine
+- Centralizes log output on the admin machine
+
+.PARAMETER $computers
+A hardcoded list of computer names (can be adapted for CSV or external source)
+
+.PARAMETER $sourceInstaller
+UNC path to the shared Archicad installer on a server
+
+.PARAMETER $localInstaller
+Path where the installer will be copied to on the remote PC
+
+.PARAMETER $params
+Parameters passed to the installer (silent/unattended mode)
+
+.NOTES
+Author: TechAsen  
+Version: 1.0  
+Created: April 2025  
+Tested on: Windows 10, 11, Server 2019  
+Requires: PowerShell Remoting (WinRM enabled) and domain credentials
+
+.EXAMPLE
+Run directly from an elevated PowerShell session:
+
+.\Update_Archicad_Remotly.ps1
+
+#>
+
 # Bypass execution policy for this session (required on some systems)
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 
