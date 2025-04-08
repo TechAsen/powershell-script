@@ -35,86 +35,72 @@ Run directly from an elevated PowerShell session:
 
 #>
 
-# Bypass execution policy for this session (required on some systems)
+# Temporarily bypass the execution policy for this process to allow script execution
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 
-# Define the list of target computers
-$computers = @("PC-001", "PC-002", "PC-N...")
+# Define the list of target computers (can be expanded with more IPs or hostnames)
+$computers = @("PC-001", "PC-002")
 
-# Network path to the Archicad installer on shared server
-$sourceInstaller = "\\dc\Scripts\Update\Archicad-27.3.2-Hotfix-INT.exe"
+# Define the path to the installer on the network share
+$sourceInstaller = "\\DC\Scripts\Update\Archicad-27.3.2-Hotfix-INT.exe"
 
-# Parameters for silent installation using Graphisoft's supported switches
-$params = '--mode unattended --unattendedmodeui minimalWithDialogs'
+# Define the local path on the remote machine where the installer will be copied
+$installerPath = "C:\ProgramData\ArchicadInstaller.exe"
 
-# Local path where installer will be copied to on each client machine
-$localInstaller = "C$\ProgramData\ArchicadInstaller.exe"
+# Define the path where installation logs will be saved
+$logPath = "C:\ProgramData\ArchicadLogs"
 
-# Remote path where log files will be stored on each machine
-$logPathRemote = "C$\ProgramData\ArchicadLogs"
+# Define the installer parameters for unattended installation
+$params = "--mode unattended --unattendedmodeui none"
 
-# Path for the central master log (local, on the admin machine running this script)
-$logPathCentral = "$env:TEMP\Archicad_MasterLog.txt"
+# Generate a timestamp to uniquely name the log file
+$timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
 
-# Start logging the whole process
-Start-Transcript -Path $logPathCentral -Append
-
-# Prompt once for domain admin credentials to use with remote commands
+# Prompt the user to enter credentials to run remote commands
 $creds = Get-Credential
 
-# Loop through each computer in the list
+# Loop through each computer
 foreach ($pc in $computers) {
+    Write-Host "`n[$pc] Checking connectivity..." -ForegroundColor Cyan
 
-    # Check if the computer is online (ping)
+    # Test if the computer is reachable (ping)
     if (Test-Connection -ComputerName $pc -Count 1 -Quiet) {
-        Write-Host "$pc is online. Proceeding with installation..."
+        Write-Host "[$pc] Online. Proceeding..." -ForegroundColor Green
 
         try {
-            # Build remote UNC path for installer copy
-            $remotePath = "\\$pc\$localInstaller"
+            # Define full path to where the installer will be copied on the remote machine
+            $destPath = "\\$pc\C$\ProgramData\ArchicadInstaller.exe"
 
-            Write-Host "Copying installer to $pc..."
-            Copy-Item -Path $sourceInstaller -Destination $remotePath -Force -ErrorAction Stop
-
-            Write-Host "Running installer on $pc..."
-
-            # Invoke remote script block to install Archicad and generate logs
-            Invoke-Command -ComputerName $pc -ScriptBlock {
-                param($params, $logPath, $installerPath, $pcName)
-
-                $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
-                $logFile = "$logPath\$pcName-$timestamp.log"
-
-                # Ensure the log directory exists
-                if (!(Test-Path $logPath)) {
-                    New-Item -ItemType Directory -Path $logPath -Force
-                }
-
-                try {
-                    Add-Content -Path $logFile -Value "[$timestamp] Starting installation..."
-                    $process = Start-Process -FilePath $installerPath -ArgumentList $params -Wait -PassThru
-                    Add-Content -Path $logFile -Value "[$timestamp] Exit code: $($process.ExitCode)"
-
-                    if ($process.ExitCode -eq 0) {
-                        Add-Content -Path $logFile -Value "[$timestamp] Installation completed successfully."
-                    } else {
-                        Add-Content -Path $logFile -Value "[$timestamp] Installation exited with error."
-                    }
-                } catch {
-                    Add-Content -Path $logFile -Value "[$timestamp] Error during installation: $_"
-                }
-
-            } -ArgumentList $params, "C:\ProgramData\ArchicadLogs", "C:\ProgramData\ArchicadInstaller.exe", $pc -Credential $creds
-
+            # Copy the installer to the remote machine
+            Copy-Item -Path $sourceInstaller -Destination $destPath -Force -ErrorAction Stop
+            Write-Host "[$pc] Installer copied." -ForegroundColor Yellow
         } catch {
-            Write-Host "[$pc] ERROR: $_"
+            # Handle any errors during the copy process
+            Write-Host "[$pc] ERROR copying installer: $_" -ForegroundColor Red
+            continue
         }
 
-    } else {
-        # Skip the machine if it's offline
-        Write-Host "$pc is offline or unreachable. Skipping..."
+        # Prepare the full command to execute the installer silently and log the output
+        $cmd = "cmd.exe /c `"$installerPath $params > $logPath\Install-$timestamp.log 2>&1`""
+
+        # Run the command remotely using the provided credentials
+        Invoke-Command -ComputerName $pc -Credential $creds -ScriptBlock {
+            param($cmdLine, $logDir)
+
+            # Ensure the log directory exists
+            if (!(Test-Path $logDir)) {
+                New-Item -ItemType Directory -Path $logDir -Force
+            }
+
+            # Execute the installation command
+            Invoke-Expression $cmdLine
+
+        } -ArgumentList $cmd, $logPath
+
+        Write-Host "[$pc] Installer started via cmd.exe" -ForegroundColor DarkGreen
+    }
+    else {
+        # If the computer is offline, skip to the next one
+        Write-Host "[$pc] Offline. Skipping." -ForegroundColor DarkGray
     }
 }
-
-# End of the session log
-Stop-Transcript
