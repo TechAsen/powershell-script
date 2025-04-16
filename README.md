@@ -7,8 +7,8 @@
 
 ### 🔹 System Maintenance
 
-#### ✅ [**Update_Archicad_Remotly.ps1**](https://github.com/TechAsen/powershell-script/blob/main/Update_Archicad_Remotly.ps1) - Remotle update on Archicad PCs via Powershell Remoting
-#### ✅ [**Remove_ArchicadInstaller.ps1**](https://github.com/TechAsen/powershell-script/blob/main/Remove_ArchicadInstaller.ps1) - Remove installation file from the local PC
+#### ✅ [**Update_Archicad_Remotly.ps1**](https://github.com/TechAsen/powershell-scripts/blob/main/Update_Archicad_Remotly.ps1) - Remotle update on Archicad PCs via Powershell Remoting
+#### ✅ [**Remove_ArchicadInstaller.ps1**](https://github.com/TechAsen/powershell-scripts/blob/main/Remove_ArchicadInstaller.ps1) - Remove installation file from the local PC
 
 ### 🔹 Network Tools
 
